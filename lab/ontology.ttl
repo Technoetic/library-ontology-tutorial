@@ -1,0 +1,26 @@
+@prefix ex: <https://example.org/library/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<https://example.org/library/> a owl:Ontology .
+
+ex:BookTitle a owl:Class .
+ex:Copy a owl:Class ;
+    rdfs:subClassOf [ a owl:Restriction ; owl:onProperty ex:hasTitle ;
+        owl:someValuesFrom ex:BookTitle ] .
+ex:Member a owl:Class .
+ex:Loan a owl:Class .
+ex:LiteratureTitle a owl:Class ; rdfs:subClassOf ex:BookTitle ;
+    owl:disjointWith ex:NonLiteratureTitle .
+ex:NonLiteratureTitle a owl:Class ; rdfs:subClassOf ex:BookTitle .
+ex:RecommendedTitle a owl:Class ; rdfs:subClassOf ex:BookTitle .
+ex:RecommendedLiterature a owl:Class ;
+    owl:equivalentClass [ a owl:Class ;
+        owl:intersectionOf (ex:LiteratureTitle ex:RecommendedTitle) ] .
+
+ex:hasTitle a owl:ObjectProperty ; rdfs:domain ex:Copy ; rdfs:range ex:BookTitle .
+ex:borrowedCopy a owl:ObjectProperty ; rdfs:domain ex:Loan ; rdfs:range ex:Copy .
+ex:borrower a owl:ObjectProperty ; rdfs:domain ex:Loan ; rdfs:range ex:Member .
+ex:copyNumber a owl:DatatypeProperty ; rdfs:range xsd:string .
+ex:loanStatus a owl:DatatypeProperty ; rdfs:range xsd:string .

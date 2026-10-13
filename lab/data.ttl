@@ -1,0 +1,11 @@
+@prefix ex: <https://example.org/library/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+ex:little-prince a ex:BookTitle, ex:LiteratureTitle ; rdfs:label "어린 왕자" .
+ex:copy-one a ex:Copy ; ex:hasTitle ex:little-prince ; ex:copyNumber "copy-one" ;
+    rdfs:label "어린 왕자 · 1번 실물" .
+ex:copy-two a ex:Copy ; ex:hasTitle ex:little-prince ; ex:copyNumber "copy-two" ;
+    rdfs:label "어린 왕자 · 2번 실물" .
+ex:reader-one a ex:Member ; rdfs:label "독자 한 분" .
+ex:loan-one a ex:Loan ; ex:borrowedCopy ex:copy-one ;
+    ex:borrower ex:reader-one ; ex:loanStatus "active" .

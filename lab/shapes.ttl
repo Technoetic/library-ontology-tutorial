@@ -1,0 +1,17 @@
+@prefix ex: <https://example.org/library/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ex:CopyShape a sh:NodeShape ; sh:targetClass ex:Copy ;
+    sh:property [ sh:path ex:hasTitle ; sh:minCount 1 ; sh:maxCount 1 ;
+        sh:class ex:BookTitle ; sh:nodeKind sh:IRI ] ;
+    sh:property [ sh:path ex:copyNumber ; sh:minCount 1 ; sh:maxCount 1 ;
+        sh:datatype xsd:string ] .
+
+ex:LoanShape a sh:NodeShape ; sh:targetClass ex:Loan ;
+    sh:property [ sh:path ex:borrowedCopy ; sh:minCount 1 ; sh:maxCount 1 ;
+        sh:class ex:Copy ] ;
+    sh:property [ sh:path ex:borrower ; sh:minCount 1 ; sh:maxCount 1 ;
+        sh:class ex:Member ] ;
+    sh:property [ sh:path ex:loanStatus ; sh:minCount 1 ; sh:maxCount 1 ;
+        sh:in ("active" "returned") ] .

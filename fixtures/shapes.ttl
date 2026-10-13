@@ -1,0 +1,45 @@
+@prefix ex: <https://example.org/library/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ex:CopyShape a sh:NodeShape ;
+  sh:targetClass ex:Copy ;
+  sh:property [
+    sh:path ex:copyNumber ;
+    sh:datatype xsd:string ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:message "실물에는 문자열로 된 식별번호가 정확히 하나 필요합니다."@ko
+  ] ;
+  sh:property [
+    sh:path ex:hasTitle ;
+    sh:class ex:BookTitle ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:message "실물은 BookTitle인 책 제목 하나와 연결해야 합니다."@ko
+  ] .
+
+ex:LoanShape a sh:NodeShape ;
+  sh:targetClass ex:Loan ;
+  sh:property [
+    sh:path ex:borrowedCopy ;
+    sh:class ex:Copy ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:message "대출은 실물 한 권과 연결해야 합니다."@ko
+  ] ;
+  sh:property [
+    sh:path ex:borrower ;
+    sh:class ex:Member ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:message "대출은 등록된 독자 한 분과 연결해야 합니다."@ko
+  ] ;
+  sh:property [
+    sh:path ex:loanStatus ;
+    sh:datatype xsd:string ;
+    sh:in ("active" "returned") ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:message "대출 상태는 active 또는 returned 하나여야 합니다."@ko
+  ] .

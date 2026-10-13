@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.venv/
+.tools/
+.work/
+docs/superpowers/
+lab/cube/node_modules/
+lab/output/
+public/downloads/*.zip
+__pycache__/
+*.pyc
+.env
+.env.*
+!.env.example

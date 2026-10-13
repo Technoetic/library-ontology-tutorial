@@ -1,0 +1,46 @@
+name: library-ontology-lab
+services:
+  postgres:
+    image: postgres:18@sha256:74935e72241653ca55e0414067e6d8763aceb8a810eb51b452253ec3dcfc4336
+    environment:
+      POSTGRES_DB: library_tutorial
+      POSTGRES_USER: tutorial
+      # Public, disposable demonstration credentials. Never reuse for real data.
+      POSTGRES_PASSWORD: tutorial-only-password
+    ports:
+      - "127.0.0.1:5538:5432"
+    volumes:
+      - library_tutorial_pg:/var/lib/postgresql
+      - ../fixtures/library.sql:/docker-entrypoint-initdb.d/001-library.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tutorial -d library_tutorial"]
+      interval: 3s
+      timeout: 3s
+      retries: 40
+  cube:
+    image: cubejs/cube:v1.8.4@sha256:d69f19c0e28fdfaf51abdac478979fb249115cf76cfa312e7a567e2525894c4a
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:4038:4000"
+    environment:
+      CUBEJS_DEV_MODE: "true"
+      CUBEJS_API_SECRET: tutorial-only-cube-secret
+      CUBEJS_DB_TYPE: postgres
+      CUBEJS_DB_HOST: postgres
+      CUBEJS_DB_NAME: library_tutorial
+      CUBEJS_DB_USER: tutorial
+      CUBEJS_DB_PASS: tutorial-only-password
+      CUBEJS_EXTERNAL_DEFAULT: "false"
+      CUBEJS_SCHEDULED_REFRESH_DEFAULT: "false"
+      CUBEJS_TELEMETRY: "false"
+    volumes:
+      - ./cube:/cube/conf:ro
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4000/cubejs-api/v1/meta').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 10s
+      retries: 36
+volumes:
+  library_tutorial_pg:

@@ -1,0 +1,70 @@
+name: Verify real engines and deploy Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: library-pages
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  verify-and-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Install browser dependencies
+        run: npm ci
+      - name: Verify real browser engines
+        run: npm test
+      - name: Install server lab dependencies
+        run: python -m pip install -r lab/requirements.txt
+      - name: Verify Java HermiT and pySHACL
+        run: |
+          python -m unittest discover -s lab/tests -v
+          python lab/run_all.py --semantic-only --output-dir public/evidence
+      - name: Verify actual PostgreSQL and Cube API
+        run: python lab/run_all.py --stack-only --output-dir public/evidence
+      - name: Build after all real engine checks pass
+        run: npm run build
+      - name: Preserve execution evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: actual-engine-evidence
+          path: public/evidence/
+      - name: Package Pages site
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: dist
+
+  deploy:
+    needs: verify-and-build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+      - name: Deploy GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
