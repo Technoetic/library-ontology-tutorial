@@ -239,11 +239,15 @@ window.addEventListener('hashchange', async () => {
 });
 markSeen(); render();
 async function loadEvidence(filename) {
-  const response = await fetch(asset(`evidence/${filename}`));
-  if (!response.ok) throw new Error(`${filename}: HTTP ${response.status}`);
-  const data = await response.json();
-  if (data.execution !== 'actual-engine-run') throw new Error(`${filename}: 실제 실행 증거 형식이 아닙니다.`);
-  return data;
+  try {
+    const response = await fetch(asset(`evidence/${filename}`));
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const data = await response.json();
+    if (data.execution !== 'actual-engine-run') throw new Error('실제 실행 증거 형식이 아닙니다.');
+    return data;
+  } catch (error) {
+    throw new Error(`${filename}: ${error.message || String(error)}`);
+  }
 }
 // These are executed artifacts, deliberately separate from the live browser DB.
 Promise.allSettled([loadEvidence('hermit-results.json'),loadEvidence('cube-results.json')]).then(results => {
