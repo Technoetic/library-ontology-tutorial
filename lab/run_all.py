@@ -16,6 +16,7 @@ import shutil
 import subprocess
 import tempfile
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
 import zipfile
@@ -189,12 +190,26 @@ def compose(*arguments: str) -> subprocess.CompletedProcess:
     return run(['docker', 'compose', '-f', str(LAB / 'compose.yaml'), *arguments], cwd=ROOT)
 
 
+class CubeRequestError(RuntimeError):
+    def __init__(self, message: str, retryable: bool):
+        super().__init__(message)
+        self.retryable = retryable
+
+
 def cube_request(route: str, query: dict) -> dict:
     url = 'http://127.0.0.1:4038/cubejs-api/v1/' + route + '?' + urllib.parse.urlencode({'query': json.dumps(query)})
-    with urllib.request.urlopen(url, timeout=30) as response:
-        payload = json.load(response)
+    try:
+        with urllib.request.urlopen(url, timeout=30) as response:
+            payload = json.load(response)
+    except urllib.error.HTTPError as error:
+        # This is the isolated public tutorial API; retain its actual message so
+        # invalid query/model errors are diagnosed rather than retried for minutes.
+        body = error.read(8000).decode('utf-8', errors='replace')
+        retryable = error.code == 429 or error.code >= 500
+        raise CubeRequestError(f'Cube {route} HTTP {error.code}: {body}', retryable) from error
     if payload.get('error'):
-        raise RuntimeError('Cube returned: ' + str(payload['error']))
+        message = str(payload['error'])
+        raise CubeRequestError('Cube returned: ' + message, retryable=message == 'Continue wait')
     return payload
 
 
@@ -210,6 +225,11 @@ def cube_counts(wait: bool = False) -> tuple[dict, dict]:
             row = payload['data'][0]
             counts = {name: int(row[member]) for name, member in zip(('titles', 'copies', 'activeLoans'), MEASURES)}
             return counts, payload
+        except CubeRequestError as error:
+            if not error.retryable:
+                raise
+            last_error = error
+            time.sleep(2)
         except (OSError, ValueError, RuntimeError) as error:
             last_error = error
             time.sleep(2)
@@ -309,6 +329,15 @@ def stack_evidence(output: Path, keep_running: bool = False) -> dict:
             assert restored == {'titles': 1, 'copies': 2, 'activeLoans': 1}, restored
             result['baselineRestored'] = True
             return result
+    except Exception:
+        # Capture only this named public tutorial project's service logs, before
+        # down removes the containers. No other host services or environment files.
+        try:
+            logs = compose('logs', '--no-color', '--tail', '120', 'postgres', 'cube')
+            print('Public tutorial service diagnostics:\n' + logs.stdout + logs.stderr, flush=True)
+        except Exception as diagnostic_error:
+            print('Could not retrieve tutorial container logs: ' + str(diagnostic_error), flush=True)
+        raise
     finally:
         if started and not keep_running:
             compose('down')
