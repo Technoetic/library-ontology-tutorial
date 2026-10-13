@@ -36,7 +36,8 @@ services:
       CUBEJS_SCHEDULED_REFRESH_DEFAULT: "false"
       CUBEJS_TELEMETRY: "false"
     volumes:
-      - ./cube:/cube/conf:ro
+      - ./cube/cube.js:/cube/conf/cube.js:ro
+      - ./cube/model:/cube/conf/model:ro
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4000/cubejs-api/v1/meta').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
       interval: 5s

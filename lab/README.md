@@ -50,7 +50,7 @@ python lab/run_all.py --output-dir public/evidence
 
 `RecommendedLiterature ≡ LiteratureTitle ∩ RecommendedTitle`은 `ontology.ttl`의 OWL 정의입니다. `LiteratureTitle`과 `NonLiteratureTitle`은 배타적입니다. `Copy ⊑ ∃hasTitle.BookTitle`은 사본의 제목이 존재한다는 논리적 조건이므로, 파일에 이름 붙인 링크가 없다는 이유만으로 모순이 되지는 않습니다. `shapes.ttl`은 **기록된 링크**가 정확히 하나인지 확인합니다.
 
-`title_categories`에는 같은 제목의 분류가 두 행 있습니다. 조인 결과의 행을 그대로 세면 하나의 대출을 두 번 셉니다. `cube/model/cubes/library.js`는 제목 ID, 사본 ID, 활성 대출 ID를 각각 `countDistinct`로 셉니다. 상태 변경 뒤 현재 DB 결과를 확인하도록 refresh key와 Cube 1.8.4의 `cacheMode: "no-cache"`를 사용합니다. Cube가 OWL을 해석하거나 SHACL을 자동으로 실행하지는 않습니다. 연결은 `run_all.py`가 명시적으로 수행합니다.
+`title_categories`에는 같은 제목의 분류가 두 행 있습니다. 조인 결과의 행을 그대로 세면 하나의 대출을 두 번 셉니다. `cube/model/cubes/library.js`는 제목 ID, 사본 ID, 활성 대출 ID를 각각 `countDistinct`로 셉니다. 상태 변경 뒤 현재 DB 결과를 확인하도록 refresh key와 Cube 1.8.4 REST API의 별도 URL 파라미터 `cache=no-cache`를 사용합니다. 이 파라미터는 서버 내부의 `cacheMode`로 전달됩니다. `query` JSON 안에 `cacheMode`를 넣으면 이 버전의 정규화 단계에서 기본값으로 바뀌므로 같은 효과가 아닙니다. Cube가 OWL을 해석하거나 SHACL을 자동으로 실행하지는 않습니다. 연결은 `run_all.py`가 명시적으로 수행합니다.
 
 서버 실습의 변화는 새 대출까지 추가하는 검증 시나리오입니다. 웹 화면에서 제목만 추가하면 사본이나 대출이 자동으로 생기지 않으므로, 웹의 제목 추가 버튼은 다른 중간 수치를 보여줍니다.
 
@@ -68,7 +68,8 @@ Cube의 실제 공통 지표 API 요청:
 
 ```bash
 curl --get 'http://127.0.0.1:4038/cubejs-api/v1/load' \
-  --data-urlencode 'query={"measures":["Library.titles","Library.copies","Library.activeLoans"],"cacheMode":"no-cache"}'
+  --data-urlencode 'query={"measures":["Library.titles","Library.copies","Library.activeLoans"]}' \
+  --data-urlencode 'cache=no-cache'
 ```
 
 진단과 정지:

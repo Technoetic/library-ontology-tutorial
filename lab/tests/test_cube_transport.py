@@ -12,22 +12,25 @@ from lab.run_all import cube_counts, cube_request
 
 
 class CubeTransportContract(unittest.TestCase):
-    def test_pinned_query_format_retries_pending_work_then_returns_counts(self):
+    def test_rest_cache_policy_retries_pending_work_then_returns_fresh_counts(self):
         requests = []
 
         class Handler(BaseHTTPRequestHandler):
             def do_GET(self):
-                query = json.loads(urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query)['query'][0])
+                parameters = urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query)
+                query = json.loads(parameters['query'][0])
                 requests.append(query)
                 # The pinned Cube 1.8.4 API rejects the removed renewQuery field.
                 if 'renewQuery' in query:
                     status, payload = 400, {'error': 'Invalid query format: "renewQuery" is not allowed'}
-                elif query.get('cacheMode') != 'no-cache':
-                    status, payload = 400, {'error': 'This mutation check needs no-cache mode'}
+                # Match the documented pinned REST normalization boundary:
+                # URL `cache` overrides query.cache; query.cacheMode is replaced.
+                elif parameters.get('cache', [query.get('cache', 'stale-if-slow')])[0] != 'no-cache':
+                    status, payload = 200, {'data': [{'Library.titles': '1', 'Library.copies': '2', 'Library.activeLoans': '1'}]}
                 elif len(requests) == 1:
                     status, payload = 200, {'error': 'Continue wait'}
                 else:
-                    status, payload = 200, {'data': [{'Library.titles': '1', 'Library.copies': '2', 'Library.activeLoans': '1'}]}
+                    status, payload = 200, {'data': [{'Library.titles': '2', 'Library.copies': '3', 'Library.activeLoans': '2'}]}
                 self.send_response(status)
                 self.send_header('Content-Type', 'application/json')
                 self.end_headers()
@@ -44,7 +47,7 @@ class CubeTransportContract(unittest.TestCase):
                     counts, _ = cube_counts()
                 except RuntimeError as error:
                     self.fail(str(error))
-                self.assertEqual(counts, {'titles': 1, 'copies': 2, 'activeLoans': 1})
+                self.assertEqual(counts, {'titles': 2, 'copies': 3, 'activeLoans': 2})
                 self.assertEqual(len(requests), 2)
             finally:
                 server.shutdown()

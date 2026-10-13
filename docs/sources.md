@@ -16,6 +16,7 @@
 | [Cube: Cubes](https://docs.cube.dev/reference/data-modeling/cube) | SQL 표·질의에 기반한 데이터 모델, 지표·차원·조인, YAML·JavaScript 선언. |
 | [Cube: Measures](https://docs.cube.dev/reference/data-modeling/measures) | 집계 지표, 고유 값 수와 필터. 현재 문서는 `count_distinct` 표기를 사용한다. 실행 실습의 문법은 고정한 서버 버전과 실제 실행 결과로 검증한다. |
 | [Cube: REST (JSON) API](https://docs.cube.dev/reference/core-data-apis/rest-api) | 공통 지표 이름을 `measures`로 요청하고 `/cubejs-api/v1/load`에서 조회하는 방식. |
+| [Cube 1.8.4: API 질의 정규화 소스](https://raw.githubusercontent.com/cube-js/cube/v1.8.4/packages/cubejs-api-gateway/src/query.ts) | `normalizeQueryCacheMode`에서 API 입력 `cache`를 내부 `cacheMode`로 옮기는 처리와, 별도 인자·기본값의 우선순위. 입력 정규화와 실제 캐시 갱신 성공은 구분해 검증한다. |
 | [GitHub Docs: What is GitHub Pages?](https://docs.github.com/en/pages/getting-started-with-github-pages/what-is-github-pages) | HTML·CSS·JavaScript를 배포하는 정적 사이트 호스팅. Java 추론기나 Cube 서버 실행은 별도 런타임이 필요하다. |
 | [GitHub Docs: Using custom workflows with GitHub Pages](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages) | 빌드 결과를 Pages 아티팩트로 업로드하고 별도 배포 작업에서 배포하는 공식 흐름과 작업 권한. |
 
@@ -26,3 +27,5 @@ Cube의 이전 `cube.dev/docs/product/...` 문서 주소는 확인 시 `docs.cub
 《어린 왕자》의 서지 1건, 복본 2권, 대출 1건은 개념을 설명하는 가상 데이터다. 주소 `https://example.org/library/`도 실습에서 만든 식별자 공간이며 외부 도서관 서비스가 아니다.
 
 공식 문서는 기술의 역할과 구문을 뒷받침한다. 실습의 1·2·1 같은 수치, HermiT 분류, SHACL 검사 결과, Cube 응답은 저장소의 입력 자료와 실행 기록을 근거로 확인한다. 공식 문서만으로 실습이 실행되었다고 주장하지 않는다.
+
+Cube 1.8.4의 정규화 함수는 별도 `cacheMode` 인자가 있으면 이를 사용한다. 그 인자가 없으면 질의의 `cache`를 내부 `cacheMode`에 옮기고, `cache`도 없으면 `stale-if-slow`를 설정한다. 따라서 입력 객체의 `cacheMode`만 지정한 값은 이 경로에서 덮어써질 수 있다. 이는 위 고정 버전 소스에서 확인한 해석 범위이며, 특정 캐시 옵션으로 변경된 지표가 실제 갱신되었는지는 서버 실험의 실행 결과로 확인해야 한다.

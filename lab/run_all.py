@@ -196,8 +196,11 @@ class CubeRequestError(RuntimeError):
         self.retryable = retryable
 
 
-def cube_request(route: str, query: dict) -> dict:
-    url = 'http://127.0.0.1:4038/cubejs-api/v1/' + route + '?' + urllib.parse.urlencode({'query': json.dumps(query)})
+def cube_request(route: str, query: dict, cache: str | None = None) -> dict:
+    parameters = {'query': json.dumps(query)}
+    if cache is not None:
+        parameters['cache'] = cache
+    url = 'http://127.0.0.1:4038/cubejs-api/v1/' + route + '?' + urllib.parse.urlencode(parameters)
     try:
         with urllib.request.urlopen(url, timeout=30) as response:
             payload = json.load(response)
@@ -214,14 +217,14 @@ def cube_request(route: str, query: dict) -> dict:
 
 
 def cube_counts(wait: bool = False) -> tuple[dict, dict]:
-    # Cube 1.8.4 rejects the removed renewQuery field. Its no-cache mode forces
-    # current database execution, which is necessary for mutation assertions.
-    query = {'measures': MEASURES, 'cacheMode': 'no-cache'}
+    # Cube 1.8.4 REST reads URL `cache` and forwards it as normalized cacheMode.
+    # A cacheMode inside query JSON is overwritten by its normalizer.
+    query = {'measures': MEASURES}
     deadline = time.monotonic() + (180 if wait else 60)
     last_error = None
     while time.monotonic() < deadline:
         try:
-            payload = cube_request('load', query)
+            payload = cube_request('load', query, cache='no-cache')
             if len(payload.get('data', [])) != 1:
                 raise RuntimeError('Cube did not return one aggregate row: ' + str(payload))
             row = payload['data'][0]
