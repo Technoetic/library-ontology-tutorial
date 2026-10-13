@@ -214,7 +214,9 @@ def cube_request(route: str, query: dict) -> dict:
 
 
 def cube_counts(wait: bool = False) -> tuple[dict, dict]:
-    query = {'measures': MEASURES, 'renewQuery': True}
+    # Cube 1.8.4 rejects the removed renewQuery field. Its no-cache mode forces
+    # current database execution, which is necessary for mutation assertions.
+    query = {'measures': MEASURES, 'cacheMode': 'no-cache'}
     deadline = time.monotonic() + (180 if wait else 60)
     last_error = None
     while time.monotonic() < deadline:

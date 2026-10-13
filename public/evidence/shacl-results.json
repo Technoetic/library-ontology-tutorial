@@ -8,7 +8,7 @@
     "lab/data.ttl": "dc963032af88140301a98f647323c7883ab240365d1e265382df97bef5c8976f",
     "lab/shapes.ttl": "70e09ab4e3e3290104fd5064037a2f67038a5b6bb8051e70518f1b0319930677",
     "fixtures/library.sql": "e02bff579fd6c023bd917bdcd62cbcc0c20e30694640a5c6e5b3088d3fd2a5fc",
-    "lab/run_all.py": "96c45462a75f9d96abf1f54862451e0147da12160371f4c3a84e997d7872f98a",
+    "lab/run_all.py": "51a7eeca8c9c2d9d72dd2a100e649f04a13e32c0bd862f7da620ba05ad80ebf5",
     "lab/requirements.txt": "2baa40fbbe5292bea297fff5430f43d7f25ef848d76d90741fd62a35532f4d9d"
   },
   "engine": {
