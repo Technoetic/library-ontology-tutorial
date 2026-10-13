@@ -109,7 +109,10 @@ def hermit_evidence(baseline: Graph | None = None) -> dict:
     match = re.search(r'Implementation-Version:\s*([^\r\n]+)', manifest)
     if not match:
         raise RuntimeError('Bundled HermiT version was not identifiable; evidence withheld.')
-    result = provenance('semantic', ['lab/ontology.ttl', 'lab/data.ttl', 'fixtures/library.sql'])
+    inputs = ['lab/ontology.ttl', 'lab/data.ttl', 'fixtures/library.sql']
+    if baseline is not None:
+        inputs.append('lab/compose.yaml')
+    result = provenance('semantic' if baseline is None else 'stack', inputs)
     result['engine'] = {
         'name': 'HermiT', 'version': match.group(1),
         'wrapper': f'owlready2 {version("owlready2")}',

@@ -6,6 +6,9 @@ import sys
 import tempfile
 import unittest
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from lab.run_all import data_graph, hermit_evidence
+
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -21,6 +24,7 @@ class RealReasoningContract(unittest.TestCase):
             self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
             hermit = json.loads((Path(output) / 'hermit-results.json').read_text('utf-8'))
             self.assertEqual(hermit['engine']['name'], 'HermiT')
+            self.assertIn('--semantic-only', hermit['command'])
             cases = hermit['cases']
             self.assertTrue(cases['baseline']['consistent'])
             self.assertFalse(cases['baseline']['recommendedLiteratureEntailed'])
@@ -38,6 +42,16 @@ class RealReasoningContract(unittest.TestCase):
             self.assertEqual(shacl['cases']['multiple-link']['violations'][0]['focus'], 'https://example.org/library/copy-two')
             self.assertIn('MinCountConstraintComponent', shacl['cases']['missing-link']['violations'][0]['constraint'])
             self.assertIn('MaxCountConstraintComponent', shacl['cases']['multiple-link']['violations'][0]['constraint'])
+
+    def test_supplied_graph_reasoning_records_the_stack_reproduction_command(self):
+        # Exercise the actual Java engine using the public graph passed through
+        # the same boundary as PostgreSQL export. No reasoner result is mocked.
+        result = hermit_evidence(data_graph())
+        self.assertIn('--stack-only', result['command'])
+        self.assertNotIn('--semantic-only', result['command'])
+        self.assertIn('lab/compose.yaml', result['inputSha256'])
+        self.assertTrue(result['cases']['baseline']['consistent'])
+        self.assertFalse(result['cases']['baseline']['recommendedLiteratureEntailed'])
 
 
 if __name__ == '__main__':
